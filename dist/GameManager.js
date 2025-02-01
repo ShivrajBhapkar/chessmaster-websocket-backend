@@ -32,11 +32,22 @@ class GameManager {
             console.error("User not found?");
             return;
         }
+        // Remove user from active users
         this.users = this.users.filter((user) => user.socket !== socket);
         SocketManager_1.socketManager.removeUser(user);
+        // Clean up pending games created by this user
+        const pendingGame = this.games.find((g) => g.gameId === this.pendingGameId &&
+            g.player1UserId === user.userId);
+        if (pendingGame) {
+            this.removeGame(pendingGame.gameId);
+            this.pendingGameId = null;
+        }
     }
     removeGame(gameId) {
         this.games = this.games.filter((g) => g.gameId !== gameId);
+        if (this.pendingGameId === gameId) {
+            this.pendingGameId = null;
+        }
     }
     addHandler(user) {
         user.socket.on("message", (data) => __awaiter(this, void 0, void 0, function* () {

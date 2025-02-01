@@ -29,11 +29,25 @@ export class GameManager {
             console.error("User not found?");
             return;
         }
+        // Remove user from active users
         this.users = this.users.filter((user) => user.socket !== socket);
         socketManager.removeUser(user);
+        // Clean up pending games created by this user
+        const pendingGame = this.games.find(
+            (g) =>
+                g.gameId === this.pendingGameId &&
+                g.player1UserId === user.userId
+        );
+        if (pendingGame) {
+            this.removeGame(pendingGame.gameId);
+            this.pendingGameId = null;
+        }
     }
     removeGame(gameId: string) {
         this.games = this.games.filter((g) => g.gameId !== gameId);
+        if (this.pendingGameId === gameId) {
+            this.pendingGameId = null;
+        }
     }
 
     private addHandler(user: User) {
@@ -75,6 +89,7 @@ export class GameManager {
                             gameId: game.gameId,
                         })
                     );
+                    
                 }
             }
 
